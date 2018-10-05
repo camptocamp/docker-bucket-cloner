@@ -77,12 +77,6 @@ for bucket in $raw_buckets; do
     if [ ! -z "${PUSHGATEWAY_URL}" ]; then
       echo "[*] Sending metrics to ${PUSHGATEWAY_URL}..."
 
-      if getent hosts rancher-metadata >/dev/null; then
-        instance=$(curl http://rancher-metadata/latest/self/container/name)
-      else
-        instance=$(hostname -f)
-      fi
-
       errors=$(sed -n '/Errors: */ s///p' rclone.log | tail -n1)
 
       cat <<EOF | curl -s --data-binary @- "${PUSHGATEWAY_URL}/metrics/job/rclone/source/${bucket//\//_}/destination/${DESTINATION//\//_}"
