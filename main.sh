@@ -65,11 +65,34 @@ for bucket in $raw_buckets; do
     # Replace [bucket] if needed
     DESTINATION=${DESTINATION_PATTERN//\[bucket\]/$bucket}
 
-    rclone -vv sync --s3-acl private src:"$bucket" dst:"$DESTINATION"
+    echo "[*] Backing up $bucket..."
+    rm -f rclone.log
+    rclone -vv sync --s3-acl private src:"$bucket" dst:"$DESTINATION" > rclone.log 2>&1
     if [ $? -eq 0 ]; then
       echo "[+] Bucket $bucket successfully synchronized."
     else
       echo "[-] Failed to backup $bucket."
+    fi
+
+    if [ ! -z "${PUSHGATEWAY_URL}" ]; then
+      echo "[*] Sending metrics to ${PUSHGATEWAY_URL}..."
+
+      if getent hosts rancher-metadata >/dev/null; then
+        instance=$(curl http://rancher-metadata/latest/self/container/name)
+      else
+        instance=$(hostname -f)
+      fi
+
+      errors=$(sed -n '/Errors: */ s///p' rclone.log | tail -n1)
+
+      cat <<EOF | curl -s --data-binary @- "${PUSHGATEWAY_URL}/metrics/job/rclone/source/${bucket//\//_}/destination/${DESTINATION//\//_}"
+# TYPE rclone_errors gauge
+rclone_errors ${errors}
+# TYPE rclone_end_time counter
+rclone_end_time $(date +%s)
+EOF
+
+      echo "[+] Metrics sent."
     fi
   fi
 done
