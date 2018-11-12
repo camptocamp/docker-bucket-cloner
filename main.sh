@@ -67,7 +67,7 @@ for bucket in $raw_buckets; do
 
     echo "[*] Backing up $bucket..."
     rm -f rclone.log
-    rclone -vv sync --s3-acl private src:"$bucket" dst:"$DESTINATION" > rclone.log 2>&1
+    rclone -vv sync $CUSTOM_OPTIONS --s3-acl private src:"$bucket" dst:"$DESTINATION" > rclone.log 2>&1
     if [ $? -eq 0 ]; then
       echo "[+] Bucket $bucket successfully synchronized."
     else
