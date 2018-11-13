@@ -67,8 +67,12 @@ for bucket in $raw_buckets; do
 
     echo "[*] Backing up $bucket..."
     rm -f rclone.log
-    rclone -vv sync $CUSTOM_OPTIONS --s3-acl private src:"$bucket" dst:"$DESTINATION" > rclone.log 2>&1
-    if [ $? -eq 0 ]; then
+    rclone -vv sync $CUSTOM_OPTIONS --log-file rclone.log --s3-acl private src:"$bucket" dst:"$DESTINATION"
+    if [[ "$LOG_LEVEL" == "debug" ]]; then
+      cat rclone.log
+    fi
+    rc=$?
+    if [ $rc -eq 0 ]; then
       echo "[+] Bucket $bucket successfully synchronized."
     else
       echo "[-] Failed to backup $bucket."
@@ -77,7 +81,11 @@ for bucket in $raw_buckets; do
     if [ ! -z "${PUSHGATEWAY_URL}" ]; then
       echo "[*] Sending metrics to ${PUSHGATEWAY_URL}..."
 
-      errors=$(sed -n '/Errors: */ s///p' rclone.log | tail -n1)
+      if [ $rc -ne 0 ]; then
+        errors=1
+      else
+        errors=$(sed -n '/Errors: */ s///p' rclone.log | tail -n1)
+      fi
 
       cat <<EOF | curl -s --data-binary @- "${PUSHGATEWAY_URL}/metrics/job/rclone/source/${bucket//\//_}/destination/${DESTINATION//\//_}"
 # TYPE rclone_errors gauge
