@@ -2,10 +2,10 @@ FROM debian:stretch
 
 RUN apt-get update && \
 	apt-get upgrade -y && \
-	apt-get install --no-install-recommends -y curl unzip s3cmd python-pip python-setuptools && \
+	apt-get install --no-install-recommends -y curl unzip python-pip python-setuptools && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN pip install wheel && pip install python-swiftclient python-keystoneclient
+RUN pip install wheel && pip install python-swiftclient python-keystoneclient s3cmd
 
 RUN curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
 RUN unzip rclone-current-linux-amd64.zip
