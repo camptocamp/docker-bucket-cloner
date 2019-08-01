@@ -11,8 +11,18 @@ RUN curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
 RUN unzip rclone-current-linux-amd64.zip
 RUN cp rclone-*-linux-amd64/rclone /bin/rclone
 
-ADD ./main.sh /
-RUN chmod +x /main.sh
+WORKDIR /app
 
-ENTRYPOINT ["/main.sh"]
+ADD ./main.sh .
+RUN chmod +x ./main.sh
+
+RUN chown 1000:1000 -R /app
+
+RUN chgrp -R 0 /app && \
+    chmod -R g=u /app
+RUN chmod g=u /etc/passwd
+
+USER 1000
+
+ENTRYPOINT ["./main.sh"]
 CMD [""]
