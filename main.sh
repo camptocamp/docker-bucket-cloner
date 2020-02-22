@@ -21,6 +21,8 @@ if [ -z "${DESTINATION_PATTERN}" ]; then
   usage
 fi
 
+rc=0
+
 if [[ "$RCLONE_CONFIG_SRC_TYPE" == "s3" ]]; then
 
   # Validate variables
@@ -37,6 +39,11 @@ if [[ "$RCLONE_CONFIG_SRC_TYPE" == "s3" ]]; then
 
   raw_buckets=$(s3cmd --access_key="$RCLONE_CONFIG_SRC_ACCESS_KEY_ID" --secret_key="$RCLONE_CONFIG_SRC_SECRET_ACCESS_KEY" --host="$RCLONE_CONFIG_SRC_ENDPOINT" ls | cut -d / -f 3)
 
+  if [ "${PIPESTATUS[0]}" -ne 0 ] || [ "${PIPESTATUS[1]}" -ne 0 ]; then
+    rc=1
+  fi
+
+
 elif [[ "$RCLONE_CONFIG_SRC_TYPE" == "swift" ]]; then
 
   export OS_AUTH_URL=$RCLONE_CONFIG_SRC_AUTH
@@ -48,13 +55,14 @@ elif [[ "$RCLONE_CONFIG_SRC_TYPE" == "swift" ]]; then
   export OS_USERNAME=$RCLONE_CONFIG_SRC_USER
 
   raw_buckets=$(swift list)
+  rc=$?
 
 else
   echo "[-] Type not recognized, please use s3 or swift."
   exit 1
 fi
 
-if [ $? -ne 0 ]; then
+if [ $rc -ne 0 ]; then
   echo "[-] Failed to list buckets on source."
   exit 1
 fi
