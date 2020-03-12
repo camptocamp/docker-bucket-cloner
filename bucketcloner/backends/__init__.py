@@ -22,7 +22,15 @@ class Backend(object):
                     aws_secret_access_key=os.environ.get("{}_SECRET_ACCESS_KEY".format(env_prefix)),
                     endpoint_url=os.environ.get("{}_ENDPOINT".format(env_prefix)))
             elif objstorage_type == "swift":
-                self.backend = Swift()
+                self.backend = Swift(
+                    user=os.environ.get("{}_USER".format(env_prefix)),
+                    key=os.environ.get("{}_KEY".format(env_prefix)),
+                    tenant_name=os.environ.get("{}_TENANT".format(env_prefix)),
+                    os_options={
+                        "region_name": os.environ.get("{}_REGION".format(env_prefix)),
+                    },
+                    auth_version=os.environ.get("{}_AUTH_VERSION".format(env_prefix)),
+                    authurl=os.environ.get("{}_AUTH".format(env_prefix)))
             else:
                 raise ValueError("unsupported value for {}_TYPE".format(env_prefix))
         else:

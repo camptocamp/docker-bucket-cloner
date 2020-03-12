@@ -1,3 +1,5 @@
 apscheduler
 prometheus_client
 boto3
+python-swiftclient
+python-keystoneclient

@@ -4,7 +4,7 @@ init:
 deps:
 	pip3 install -r requirements.txt
 
-dev-deps:
+dev-deps: deps
 	pip3 install -r requirements-dev.txt
 
 lint:
