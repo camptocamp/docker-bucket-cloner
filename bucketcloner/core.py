@@ -13,7 +13,10 @@ def _setup_logging(log_level):
     numeric_level = getattr(logging, log_level.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: {}'.format(log_level))
-    logging.basicConfig(level=numeric_level)
+    logging.basicConfig(
+        level=numeric_level,
+        format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
 
 def _start_server(address, port):
     server = ThreadedHTTPServer(address, port)
