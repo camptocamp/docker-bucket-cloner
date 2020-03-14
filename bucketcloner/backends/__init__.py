@@ -29,7 +29,7 @@ class Backend(object):
                     os_options={
                         "region_name": os.environ.get("{}_REGION".format(env_prefix)),
                     },
-                    auth_version=os.environ.get("{}_AUTH_VERSION".format(env_prefix)),
+                    auth_version=os.environ.get("{}_AUTH_VERSION".format(env_prefix), "3"),
                     authurl=os.environ.get("{}_AUTH".format(env_prefix)))
             else:
                 raise ValueError("unsupported value for {}_TYPE".format(env_prefix))
