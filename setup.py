@@ -8,7 +8,7 @@ import bucketcloner
 setup(
     name='bucketcloner',
 
-    version='1.0.0',
+    version='2.0.0',
     packages=find_packages(),
     author="Léo Depriester",
     author_email="leo.depriester@camptocamp.com",
