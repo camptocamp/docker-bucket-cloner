@@ -13,7 +13,20 @@ class Backend(object):
     def __init__(self, destination_pattern, whitelist, env_prefix=""):
         self.whitelist = whitelist or ""
         self.destination_pattern = destination_pattern
-        self.metrics = {}
+        self.metrics = {
+                'rclone_start_time': Gauge(
+                    "rclone_start_time",
+                    "When RClone started.",
+                    ["source", "destination"]),
+                'rclone_end_time': Gauge(
+                    "rclone_end_time",
+                    "When RClone stopped.",
+                    ["source", "destination"]),
+                'rclone_errors': Gauge(
+                    "rclone_errors",
+                    "Errors from RClone.",
+                    ["source", "destination"]),
+                }
 
         if env_prefix != "":
             objstorage_type = os.environ.get("{}_TYPE".format(env_prefix))
@@ -46,30 +59,11 @@ class Backend(object):
                 buckets.append(rb)
         return buckets
 
-    def setup_metric(self, src_bucket, dst_bucket, metric_name, metric_description):
-        if src_bucket not in self.metrics:
-            self.metrics[src_bucket] = {}
-        if dst_bucket not in self.metrics[src_bucket]:
-            self.metrics[src_bucket][dst_bucket] = {}
-
-        if metric_name not in self.metrics[src_bucket][dst_bucket]:
-            self.metrics[src_bucket][dst_bucket][metric_name] = Gauge(
-                    metric_name,
-                    metric_description,
-                    ["source", "destination"]).labels(
-                            source=src_bucket,
-                            destination=dst_bucket)
-
     def run_rclone(self, bucket):
         destination_bucket = self.destination_pattern.replace("[bucket]", bucket)
         logging.info(destination_bucket)
 
-        self.setup_metric(
-                bucket,
-                destination_bucket,
-                'rclone_start_time',
-                'When RClone started.')
-        self.metrics[bucket][destination_bucket]['rclone_start_time'].set_to_current_time()
+        self.metrics['rclone_start_time'].labels(source=bucket, destination=destination_bucket).set_to_current_time()
 
         popen = subprocess.Popen(['rclone', '-vv', 'sync',
             '--s3-acl', 'private',
@@ -90,12 +84,7 @@ class Backend(object):
         # Show output as it might be helpful for debugging
         logging.debug(output)
 
-        self.setup_metric(
-                bucket,
-                destination_bucket,
-                'rclone_end_time',
-                'When RClone stopped.')
-        self.metrics[bucket][destination_bucket]['rclone_end_time'].set_to_current_time()
+        self.metrics['rclone_end_time'].labels(source=bucket, destination=destination_bucket).set_to_current_time()
 
         # Check for errors
         rclone_errors = 0
@@ -105,12 +94,6 @@ class Backend(object):
         if popen.returncode > 0:
             rclone_errors = popen.returncode
 
-
-        self.setup_metric(
-                bucket,
-                destination_bucket,
-                'rclone_errors',
-                'Errors from RClone')
-        self.metrics[bucket][destination_bucket]['rclone_errors'].set(rclone_errors)
+        self.metrics['rclone_errors'].labels(source=bucket, destination=destination_bucket).set(rclone_errors)
 
         return popen.returncode, output
