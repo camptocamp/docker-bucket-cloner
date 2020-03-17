@@ -1,3 +1,4 @@
+import sys
 import os
 import re
 import logging
@@ -73,9 +74,18 @@ class Backend(object):
         popen = subprocess.Popen(['rclone', '-vv', 'sync',
             '--s3-acl', 'private',
             'src:{}'.format(bucket),
-            'dst:{}'.format(destination_bucket)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            'dst:{}'.format(destination_bucket)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1, universal_newlines=True)
+
+        # Poll process for new output until finished
+        for line in popen.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+
         popen.wait()
-        output = popen.stdout.read().decode('utf-8')
+        output = popen.communicate()[0]
 
         # Show output as it might be helpful for debugging
         logging.debug(output)
