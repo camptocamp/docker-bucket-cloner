@@ -73,16 +73,15 @@ class Backend(object):
             stderr=subprocess.STDOUT,
             bufsize=1, universal_newlines=True)
 
+        output = ""
         # Poll process for new output until finished
         for line in popen.stdout:
-            sys.stdout.write(line)
-            sys.stdout.flush()
+            output += line
+            if logging.DEBUG == logging.root.level:
+                sys.stdout.write(line)
+                sys.stdout.flush()
 
         popen.wait()
-        output = popen.communicate()[0]
-
-        # Show output as it might be helpful for debugging
-        logging.debug(output)
 
         self.metrics['rclone_end_time'].labels(source=bucket, destination=destination_bucket).set_to_current_time()
 
