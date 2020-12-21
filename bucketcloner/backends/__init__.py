@@ -65,7 +65,7 @@ class Backend(object):
 
         self.metrics['rclone_start_time'].labels(source=bucket, destination=destination_bucket).set_to_current_time()
 
-        popen = subprocess.Popen(['rclone', '-vv', 'sync',
+        popen = subprocess.Popen(['rclone', '-v', 'sync',
             '--s3-acl', 'private',
             'src:{}'.format(bucket),
             'dst:{}'.format(destination_bucket)],
