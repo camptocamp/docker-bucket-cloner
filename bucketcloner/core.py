@@ -29,9 +29,9 @@ def _list_buckets(backend):
 
 def _run_bc(backend, bucket):
     logging.info("Starting job for `{}`".format(bucket))
-    rc, output = backend.run_rclone(bucket)
+    rc = backend.run_rclone(bucket)
     if rc != 0:
-        logging.error("Job for `{}` didn't run successfully: {}".format(bucket, output))
+        logging.error("Job for `{}` didn't run successfully: {}".format(bucket))
     else:
         logging.info("Job for `{}` successfully executed".format(bucket))
 

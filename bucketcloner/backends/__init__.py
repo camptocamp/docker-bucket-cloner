@@ -1,6 +1,7 @@
-import sys
 import os
 import re
+import sys
+import time
 import logging
 import subprocess
 from prometheus_client import Gauge
@@ -73,26 +74,25 @@ class Backend(object):
             stderr=subprocess.STDOUT,
             bufsize=1, universal_newlines=True)
 
-        output = ""
+        rclone_errors = 0
         # Poll process for new output until finished
         for line in popen.stdout:
-            output += line
+
+            # Check for errors
+            match_rclone_errors = re.findall(r'Errors:\s+(\d+)', line)
+
+            if match_rclone_errors:
+                rclone_errors = match_rclone_errors[-1]
+
             if logging.DEBUG == logging.root.level:
                 sys.stdout.write(line)
                 sys.stdout.flush()
 
         popen.wait()
 
-        self.metrics['rclone_end_time'].labels(source=bucket, destination=destination_bucket).set_to_current_time()
-
-        # Check for errors
-        rclone_errors = 0
-        match_rclone_errors = re.findall(r'Errors:\s+(\d+)', output)
-        if match_rclone_errors:
-            rclone_errors = match_rclone_errors[-1]
         if popen.returncode > 0:
             rclone_errors = popen.returncode
 
         self.metrics['rclone_errors'].labels(source=bucket, destination=destination_bucket).set(rclone_errors)
 
-        return popen.returncode, output
+        return popen.returncode
