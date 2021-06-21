@@ -23,6 +23,10 @@ class Backend(object):
                     "rclone_end_time",
                     "When RClone stopped.",
                     ["source", "destination"]),
+                'rclone_rc': Gauge(
+                    "rclone_rc",
+                    "Return code from RClone.",
+                    ["source", "destination"]),
                 'rclone_errors': Gauge(
                     "rclone_errors",
                     "Errors from RClone.",
@@ -64,7 +68,7 @@ class Backend(object):
         destination_bucket = self.destination_pattern.replace("[bucket]", bucket)
         logging.info(destination_bucket)
 
-        self.metrics['rclone_start_time'].labels(source=bucket, destination=destination_bucket).set_to_current_time()
+        start_time = time.time()
 
         popen = subprocess.Popen(['rclone', '-v', 'sync',
             '--s3-acl', 'private',
@@ -93,6 +97,11 @@ class Backend(object):
         if popen.returncode > 0:
             rclone_errors = popen.returncode
 
+        end_time = time.time()
+
+        self.metrics['rclone_start_time'].labels(source=bucket, destination=destination_bucket).set(start_time)
+        self.metrics['rclone_end_time'].labels(source=bucket, destination=destination_bucket).set(end_time)
+        self.metrics['rclone_rc'].labels(source=bucket, destination=destination_bucket).set(popen.returncode)
         self.metrics['rclone_errors'].labels(source=bucket, destination=destination_bucket).set(rclone_errors)
 
         return popen.returncode
