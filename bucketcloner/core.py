@@ -4,8 +4,9 @@ import os
 import argparse
 import logging
 from prometheus_client import Gauge
-from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from .api import ThreadedHTTPServer
 from .backends import Backend
 
@@ -26,6 +27,23 @@ def _start_server(address, port):
 
 def _list_buckets(backend):
     return backend.list_buckets()
+
+def _run_main(backend, scheduler):
+    logging.info("Starting main job")
+    buckets = backend.list_buckets()
+
+    running_job_ids = ""
+
+    for job in scheduler.get_jobs():
+        if not job.id in buckets:
+            job.remove()
+        else:
+            running_job_ids.append(job.id)
+
+    for bucket in buckets:
+        if not bucket in running_job_ids:
+            logging.info("Creating job for bucket `{}`".format(bucket))
+            scheduler.add_job(_run_bc, id=bucket, misfire_grace_time=86400, args=[backend, bucket])
 
 def _run_bc(backend, bucket):
     logging.info("Starting job for `{}`".format(bucket))
@@ -58,18 +76,22 @@ def main():
                             'WHITELIST'))
 
     args, unknown = parser.parse_known_args()
+
     _setup_logging(args.log_level)
-    scheduler = BlockingScheduler()
+
     backend = Backend(args.destination_pattern, args.whitelist, env_prefix="RCLONE_CONFIG_SRC")
 
-    buckets = backend.list_buckets()
-    for bucket in buckets:
-        logging.info("Creating job for bucket `{}`".format(bucket))
-        scheduler.add_job(_run_bc, CronTrigger.from_crontab(args.schedule), args=[backend, bucket])
+    main_scheduler = BlockingScheduler()
+    bc_scheduler = BackgroundScheduler()
+
+    main_scheduler.add_job(_run_main, trigger=CronTrigger.from_crontab(args.schedule), coalesce=True, args=[backend, bc_scheduler])
 
     server = _start_server(args.address, args.port)
+
+    bc_scheduler.start()
+
     try:
-        scheduler.start()
+        main_scheduler.start()
     except (KeyboardInterrupt, SystemExit):
         pass
 
