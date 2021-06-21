@@ -67,6 +67,9 @@ def main():
     parser.add_argument("--port", help="Port the daemon should listen on.",
                         type=int, default=os.environ.get(
                             'BKC_DAEMON_PORT', 8581))
+    parser.add_argument("--timezone", help="Timezone for the daemon scheduler",
+                        type=str, default=os.environ.get(
+                            'BKC_DAEMON_TIMEZONE', 'UTC'))
     parser.add_argument("--destination-pattern",
                         help="Bucket destination pattern.",
                         type=str, default=os.environ.get(
@@ -84,7 +87,7 @@ def main():
     main_scheduler = BlockingScheduler()
     bc_scheduler = BackgroundScheduler()
 
-    main_scheduler.add_job(_run_main, trigger=CronTrigger.from_crontab(args.schedule), coalesce=True, args=[backend, bc_scheduler])
+    main_scheduler.add_job(_run_main, trigger=CronTrigger.from_crontab(args.schedule, timezone=args.timezone), coalesce=True, args=[backend, bc_scheduler])
 
     server = _start_server(args.address, args.port)
 
