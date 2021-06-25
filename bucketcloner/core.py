@@ -25,9 +25,6 @@ def _start_server(address, port):
     logging.info("HTTP server started on {}:{}".format(address, port))
     return server
 
-def _list_buckets(backend):
-    return backend.list_buckets()
-
 def _run_main(backend, scheduler):
     logging.info("Starting main job")
     buckets = backend.list_buckets()

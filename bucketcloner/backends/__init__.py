@@ -94,9 +94,6 @@ class Backend(object):
 
         popen.wait()
 
-        if popen.returncode > 0:
-            rclone_errors = popen.returncode
-
         end_time = time.time()
 
         self.metrics['rclone_start_time'].labels(source=bucket, destination=destination_bucket).set(start_time)
