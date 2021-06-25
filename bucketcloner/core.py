@@ -29,18 +29,9 @@ def _run_main(backend, scheduler):
     logging.info("Starting main job")
     buckets = backend.list_buckets()
 
-    running_job_ids = ""
-
-    for job in scheduler.get_jobs():
-        if not job.id in buckets:
-            job.remove()
-        else:
-            running_job_ids.append(job.id)
-
     for bucket in buckets:
-        if not bucket in running_job_ids:
-            logging.info("Creating job for bucket `{}`".format(bucket))
-            scheduler.add_job(_run_bc, id=bucket, misfire_grace_time=86400, args=[backend, bucket])
+        logging.info("Creating job for bucket `{}`".format(bucket))
+        scheduler.add_job(_run_bc, id=bucket, misfire_grace_time=86400, args=[backend, bucket])
 
 def _run_bc(backend, bucket):
     logging.info("Starting job for `{}`".format(bucket))
