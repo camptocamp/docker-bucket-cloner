@@ -70,10 +70,13 @@ class Backend(object):
 
         start_time = time.time()
 
-        popen = subprocess.Popen(['rclone', '-v', 'sync',
-            '--s3-acl', 'private',
-            'src:{}'.format(bucket),
-            'dst:{}'.format(destination_bucket)],
+        prefix_cmd = ['rclone']
+
+        if logging.DEBUG == logging.root.level:
+            prefix_cmd = ['rclone', '-v', '--stats', '5m']
+
+        popen = subprocess.Popen(
+            prefix_cmd + ['sync', '--s3-acl', 'private', 'src:{}'.format(bucket), 'dst:{}'.format(destination_bucket)],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1, universal_newlines=True)
@@ -88,9 +91,8 @@ class Backend(object):
             if match_rclone_errors:
                 rclone_errors = match_rclone_errors[-1]
 
-            if logging.DEBUG == logging.root.level:
-                sys.stdout.write(line)
-                sys.stdout.flush()
+            sys.stdout.write(line)
+            sys.stdout.flush()
 
         popen.wait()
 
