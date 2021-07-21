@@ -73,10 +73,10 @@ class Backend(object):
         prefix_cmd = ['rclone']
 
         if logging.DEBUG == logging.root.level:
-            prefix_cmd = ['rclone', '-v', '--stats', '5m']
+            prefix_cmd = ['rclone', '-v']
 
         popen = subprocess.Popen(
-            prefix_cmd + ['sync', '--s3-acl', 'private', 'src:{}'.format(bucket), 'dst:{}'.format(destination_bucket)],
+            prefix_cmd + ['sync', '--s3-acl', 'private', '--stats', '10m', 'src:{}'.format(bucket), 'dst:{}'.format(destination_bucket)],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1, universal_newlines=True)
