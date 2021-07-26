@@ -70,7 +70,7 @@ class Backend(object):
 
         start_time = time.time()
 
-        prefix_cmd = ['rclone']
+        prefix_cmd = ['rclone', '--stats-log-level', 'NOTICE']
 
         if logging.DEBUG == logging.root.level:
             prefix_cmd = ['rclone', '-v']
