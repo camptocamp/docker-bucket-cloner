@@ -82,14 +82,20 @@ class Backend(object):
             bufsize=1, universal_newlines=True)
 
         rclone_errors = 0
+        pattern = re.compile(r'\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ERROR : Attempt \d+/\d+ (?:(?P<failed>failed) with (?P<errors>\d+) errors|(?P<succeeded>succeeded))')
         # Poll process for new output until finished
         for line in popen.stdout:
 
             # Check for errors
-            match_rclone_errors = re.findall(r'Errors:\s+(\d+)', line)
+            match = pattern.match(line)
 
-            if match_rclone_errors:
-                rclone_errors = match_rclone_errors[-1]
+            if match:
+                if match.group('failed'):
+                    rclone_errors = int(match.group('errors'))
+                elif match.group('succeeded'):
+                    rclone_errors = 0
+                else:
+                    raise RuntimeError('unexpected match')
 
             sys.stdout.write(line)
             sys.stdout.flush()
