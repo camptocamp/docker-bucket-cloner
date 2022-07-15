@@ -8,7 +8,7 @@ A tool to synchronize buckets between cloud prodivers regions or between cloud p
 To synchronize a bucket you just need to launch the docker image with the following environment variables :
 
 * BKC_DAEMON_SCHEDULE : Cron style sheduling time to launch the sync tool (default: '0 1 * * *')
-* DESTINATION_PATTERN : Pattern for the destination (default : '/[bucket]', will create a folder for each source bucket at the root of the dest bucket)
+* DESTINATION_PATTERN (mandatory): Pattern for the destination (e.g : '[bucket]', will create a folder for each source bucket at the root of the dest bucket)
 * WHITELIST : The tool lists all available bucket and filter them with a regex, for example '.\*production.\*' (default: none)
 * RCLONE_CONFIG_* : A list of envars with the source and destination buckets configurations, see this [doc](https://rclone.org/docs/#environment-variables).
 
@@ -19,10 +19,11 @@ A basic example would look like :
       RCLONE_CONFIG_DST_SECRET_ACCESS_KEY: DESTINATIONSECRETACCESSKEY
       RCLONE_CONFIG_DST_TYPE: s3
 
-      RCLONE_CONFIG_SRC_ACCESS_KEY_ID: AKIAXXX
-      RCLONE_CONFIG_SRC_REGION: eu-central-1
+      RCLONE_CONFIG_SRC_ACCESS_KEY_ID: SCWXXX
+      RCLONE_CONFIG_SRC_REGION: fr-par
       RCLONE_CONFIG_SRC_SECRET_ACCESS_KEY: SOURCESECRETACCESSKEY
       RCLONE_CONFIG_SRC_TYPE: s3
+      RCLONE_CONFIG_SRC_PROVIDER: Scaleway
 ````
 
 Other optional envars :
